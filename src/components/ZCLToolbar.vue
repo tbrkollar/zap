@@ -31,6 +31,7 @@
       push
       no-caps
       class="cursor-pointer"
+      :class="{ 'q-btn--active': isGenerateTabActive }"
       @click="generateIntoDirectory(generationDirectory)"
     >
       <div class="text-center">
@@ -60,6 +61,7 @@
       flat
       no-caps
       class="cursor-pointer"
+      :class="{ 'q-btn--active': globalOptionsDialog }"
       @click="globalOptionsDialog = !globalOptionsDialog"
     >
       <div class="text-center">
@@ -73,6 +75,7 @@
       flat
       no-caps
       color="grey"
+      :class="{ 'q-btn--active': zclExtensionDialog }"
       @click="zclExtensionDialog = true"
     >
       <div class="text-center">
@@ -87,6 +90,7 @@
       to="/notifications"
       id="Notifications"
       color="grey"
+      :class="{ 'q-btn--active': $route.meta.name === 'notifications' }"
     >
       <div class="text-center">
         <q-icon name="o_assignment_late" />
@@ -109,6 +113,7 @@
       flat
       no-caps
       id="Preview"
+      :class="{ 'q-btn--active': isPreviewTabActive }"
       color="grey"
       @click="
         () => {
@@ -128,6 +133,7 @@
       no-caps
       color="grey"
       class="cursor-pointer"
+      :class="{ 'q-btn--active': isTutorialRunning }"
       @click="startTour"
     >
       <div class="text-center">
@@ -143,6 +149,7 @@
       to="/preferences/user"
       id="Settings"
       color="grey"
+      :class="{ 'q-btn--active': $route.meta.name === 'settings' }"
     >
       <div class="text-center">
         <q-icon name="o_settings" />
@@ -203,6 +210,11 @@ export default {
         return this.$store.state.zap.debugNavBar
       },
     },
+    isTutorialRunning: {
+      get() {
+        return this.$store.state.zap.isTutorialRunning
+      },
+    },
     getLogo: {
       get() {
         if (this.$store.state.zap.selectedZapConfig?.zclProperties.category) {
@@ -231,8 +243,10 @@ export default {
       isExpanded: false,
       globalOptionsDialog: false,
       zclExtensionDialog: false,
+      isPreviewTabActive: false,
       notification: '',
       generationDirectory: '',
+      isGenerateTabActive: false,
     }
   },
   methods: {
@@ -254,6 +268,7 @@ export default {
     startTour,
     togglePreviewTab() {
       this.$store.commit('zap/togglePreviewTab')
+      this.isPreviewTabActive = !this.isPreviewTabActive
     },
     generateIntoDirectory(currentPath) {
       window[rendApi.GLOBAL_SYMBOL_NOTIFY](rendApi.notifyKey.fileBrowse, {
@@ -263,6 +278,7 @@ export default {
         defaultPath: currentPath,
         buttonLabel: 'Generate',
       })
+      this.isGenerateTabActive = true
     },
     doGeneration(path) {
       window[rendApi.GLOBAL_SYMBOL_EXECUTE](
@@ -307,6 +323,7 @@ export default {
         this.generationDirectory = value.filePaths[0]
         this.doGeneration(this.generationDirectory)
       }
+      this.isGenerateTabActive = false
     })
     observable.observeAttribute(rendApi.observable.debugNavBar, (value) => {
       this.$store.dispatch('zap/setDebugNavBar', value)

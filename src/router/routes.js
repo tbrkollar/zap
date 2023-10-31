@@ -55,6 +55,9 @@ const routes = [
   },
   {
     path: '/preferences/user',
+    meta: {
+      name: 'settings',
+    },
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
@@ -68,6 +71,9 @@ const routes = [
   },
   {
     path: '/preferences/generation',
+    meta: {
+      name: 'settings',
+    },
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
@@ -81,6 +87,9 @@ const routes = [
   },
   {
     path: '/preferences/package',
+    meta: {
+      name: 'settings',
+    },
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
@@ -94,6 +103,9 @@ const routes = [
   },
   {
     path: '/preferences/about',
+    meta: {
+      name: 'settings',
+    },
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
@@ -107,6 +119,9 @@ const routes = [
   },
   {
     path: '/preferences/devtools/information-setup',
+    meta: {
+      name: 'settings',
+    },
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
@@ -121,6 +136,9 @@ const routes = [
   },
   {
     path: '/preferences/devtools/sql-query',
+    meta: {
+      name: 'settings',
+    },
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
@@ -134,6 +152,9 @@ const routes = [
   },
   {
     path: '/preferences/devtools/api-exceptions',
+    meta: {
+      name: 'settings',
+    },
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
@@ -147,7 +168,9 @@ const routes = [
   },
   {
     path: '/notifications',
-    name: 'notifications',
+    meta: {
+      name: 'notifications',
+    },
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {

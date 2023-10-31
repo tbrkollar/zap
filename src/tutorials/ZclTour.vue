@@ -85,6 +85,7 @@ export default {
   methods: {
     startTour() {
       this.$refs['zcl-tour'].resetTour()
+      this.$store.commit('zap/toggleTutorial', true)
     },
     // This function will create a endpoint for tutorial
     createNewEndpointForTour(resolve) {
