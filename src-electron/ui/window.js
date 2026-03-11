@@ -122,15 +122,16 @@ function createQueryString(
  */
 export function windowCreate(port, args) {
   const devtoolsMode = process.argv.includes('--devtools')
+  const standaloneDevtools = process.env.ZAP_STANDALONE_DEVTOOLS === '1'
   let webPreferences = {
     nodeIntegration: false,
     worldSafeExecuteJavaScript: true,
     preload: path.resolve(__dirname, 'preload.js'),
-    // Keep default secure isolation for normal runs; relax only for devtools mode
-    // so Vue app and injected devtools bridge share the same global hook.
+    // Keep default secure isolation for normal runs; relax in any devtools mode.
     contextIsolation: !devtoolsMode,
     sandbox: !devtoolsMode,
-    additionalArguments: devtoolsMode ? ['--zap-devtools'] : []
+    additionalArguments:
+      devtoolsMode && standaloneDevtools ? ['--zap-devtools'] : []
   }
   windowCounter++
   let w = new BrowserWindow({

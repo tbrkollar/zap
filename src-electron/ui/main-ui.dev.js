@@ -24,27 +24,19 @@
  * @module JS API: UI Development
  */
 
-const { app } = require('electron')
+const { app, session } = require('electron')
 const { execSync, spawn } = require('child_process')
 const net = require('net')
 const path = require('path')
 const env = require('../util/env')
-// 1. Kill stale Vue DevTools instances and spawn a fresh one.
-try {
-  execSync('pkill -f "vue-devtools"', { stdio: 'ignore' })
-} catch (_err) {
-  // No previous devtools process found.
-}
-const devtoolsProcess = spawn(
-  'npx',
-  ['vue-devtools', '--host', 'localhost', '--port', '8098'],
-  {
-    cwd: path.join(__dirname, '../../..'),
-    stdio: 'inherit',
-    shell: true
-  }
-)
-env.logInfo('Vue DevTools server starting on http://localhost:8098')
+const installer = require('electron-devtools-installer')
+const installExtension = installer.default || installer
+const VUEJS_DEVTOOLS = installer.VUEJS_DEVTOOLS
+const VUEJS_DEVTOOLS_BETA = installer.VUEJS_DEVTOOLS_BETA
+let devtoolsProcess = null
+const devtoolsMode = (
+  process.env.ZAP_DEVTOOLS_MODE || 'standalone'
+).toLowerCase()
 
 /**
  * Wait until Vue DevTools server accepts TCP connections.
@@ -75,13 +67,84 @@ function waitForDevtoolsServer() {
   })
 }
 
-// 2. Clean up: kill the devtools server when the app exits
+/**
+ * Starts standalone Vue DevTools server and bootstraps main UI when ready.
+ */
+function bootStandaloneDevtools() {
+  process.env.ZAP_STANDALONE_DEVTOOLS = '1'
+  try {
+    execSync('pkill -f "vue-devtools"', { stdio: 'ignore' })
+  } catch (_err) {
+    // No previous devtools process found.
+  }
+  devtoolsProcess = spawn(
+    'npx',
+    ['vue-devtools', '--host', 'localhost', '--port', '8098'],
+    {
+      cwd: path.join(__dirname, '../../..'),
+      stdio: 'inherit',
+      shell: true
+    }
+  )
+  env.logInfo(
+    'Vue DevTools standalone server starting on http://localhost:8098'
+  )
+  waitForDevtoolsServer().then(() => {
+    require('./main-ui.js')
+  })
+}
+
+/**
+ * Attempts same-window Vue DevTools extension, then falls back to standalone.
+ */
+function bootEmbeddedDevtools() {
+  const defaultSession = session.defaultSession
+  defaultSession
+    .clearStorageData({ storages: ['serviceworkers'] })
+    .catch(() => {
+      // Ignore cleanup failures in dev mode.
+    })
+  ;[VUEJS_DEVTOOLS.id, VUEJS_DEVTOOLS_BETA.id].forEach((extensionId) => {
+    try {
+      defaultSession.removeExtension(extensionId)
+    } catch (_err) {
+      // Ignore unload failures for non-installed extensions.
+    }
+  })
+
+  installExtension(VUEJS_DEVTOOLS_BETA, { forceDownload: true })
+    .then((extension) => {
+      const extensionName =
+        extension && extension.name ? extension.name : 'Vue DevTools'
+      env.logInfo(`Embedded Vue DevTools loaded: ${extensionName}`)
+      require('./main-ui.js')
+    })
+    .catch((err) => {
+      env.logWarn(
+        `Embedded Vue DevTools failed (${err && err.message ? err.message : err}); falling back to standalone`
+      )
+      bootStandaloneDevtools()
+    })
+}
+
+// Clean up: kill the standalone devtools server when the app exits
 app.on('will-quit', () => {
   if (devtoolsProcess && !devtoolsProcess.killed) {
     devtoolsProcess.kill()
   }
 })
-// Require `main` process to boot app after devtools is reachable.
-waitForDevtoolsServer().then(() => {
-  require('./main-ui.js')
+
+app.whenReady().then(() => {
+  if (devtoolsMode === 'embedded') {
+    env.logInfo('Devtools mode: embedded')
+    bootEmbeddedDevtools()
+    return
+  }
+  if (devtoolsMode === 'auto') {
+    env.logInfo('Devtools mode: auto (embedded with standalone fallback)')
+    bootEmbeddedDevtools()
+    return
+  }
+  env.logInfo('Devtools mode: standalone')
+  bootStandaloneDevtools()
 })

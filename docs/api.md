@@ -17613,10 +17613,28 @@ This file is used specifically and only for development. It installs
  modify this file, but it can be used to extend your development
  environment.
 
+
+* [JS API: UI Development](#module_JS API_ UI Development)
+    * [~waitForDevtoolsServer()](#module_JS API_ UI Development..waitForDevtoolsServer) ⇒ <code>Promise.&lt;void&gt;</code>
+    * [~bootStandaloneDevtools()](#module_JS API_ UI Development..bootStandaloneDevtools)
+    * [~bootEmbeddedDevtools()](#module_JS API_ UI Development..bootEmbeddedDevtools)
+
 <a name="module_JS API_ UI Development..waitForDevtoolsServer"></a>
 
 ### JS API: UI Development~waitForDevtoolsServer() ⇒ <code>Promise.&lt;void&gt;</code>
 Wait until Vue DevTools server accepts TCP connections.
+
+**Kind**: inner method of [<code>JS API: UI Development</code>](#module_JS API_ UI Development)  
+<a name="module_JS API_ UI Development..bootStandaloneDevtools"></a>
+
+### JS API: UI Development~bootStandaloneDevtools()
+Starts standalone Vue DevTools server and bootstraps main UI when ready.
+
+**Kind**: inner method of [<code>JS API: UI Development</code>](#module_JS API_ UI Development)  
+<a name="module_JS API_ UI Development..bootEmbeddedDevtools"></a>
+
+### JS API: UI Development~bootEmbeddedDevtools()
+Attempts same-window Vue DevTools extension, then falls back to standalone.
 
 **Kind**: inner method of [<code>JS API: UI Development</code>](#module_JS API_ UI Development)  
 <a name="module_JS API_ UI"></a>
