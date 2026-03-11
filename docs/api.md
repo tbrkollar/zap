@@ -17613,6 +17613,12 @@ This file is used specifically and only for development. It installs
  modify this file, but it can be used to extend your development
  environment.
 
+<a name="module_JS API_ UI Development..waitForDevtoolsServer"></a>
+
+### JS API: UI Development~waitForDevtoolsServer() ⇒ <code>Promise.&lt;void&gt;</code>
+Wait until Vue DevTools server accepts TCP connections.
+
+**Kind**: inner method of [<code>JS API: UI Development</code>](#module_JS API_ UI Development)  
 <a name="module_JS API_ UI"></a>
 
 ## JS API: UI
