@@ -16,8 +16,48 @@
  */
 
 const { contextBridge, ipcRenderer } = require('electron')
+const fs = require('fs')
+const path = require('path')
 
-contextBridge.exposeInMainWorld('electronAPI', {
+if (process.argv.includes('--zap-devtools')) {
+  try {
+    const userAppIifePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'node_modules',
+      '@vue',
+      'devtools-electron',
+      'dist',
+      'user-app.iife.js'
+    )
+    const userAppIifeCode = fs.readFileSync(userAppIifePath, 'utf-8')
+
+    const injectIife = () => {
+      window.__VUE_DEVTOOLS_HOST__ = 'http://localhost'
+      window.__VUE_DEVTOOLS_PORT__ = 8098
+      // eslint-disable-next-line no-eval
+      window.eval(userAppIifeCode)
+    }
+
+    // Initial injection + retries to avoid startup race where
+    // devtools server is not yet ready on the first attempt.
+    injectIife()
+    setTimeout(injectIife, 1500)
+    setTimeout(injectIife, 4000)
+  } catch (_err) {
+    // Ignore: devtools init should not break app startup.
+  }
+}
+
+const electronApi = {
   setTitleBarOverlay: (titleBarOverlay) =>
     ipcRenderer.send('set-title-bar-overlay', titleBarOverlay)
-})
+}
+
+if (process.contextIsolated) {
+  contextBridge.exposeInMainWorld('electronAPI', electronApi)
+} else {
+  window.electronAPI = electronApi
+}

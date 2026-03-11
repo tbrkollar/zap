@@ -52,7 +52,9 @@ scriptUtil
         break
       default:
         executable = 'electron'
-        main = scriptUtil.mainPath(true)
+        main = args.includes('--devtools')
+          ? scriptUtil.mainPath(true, true)
+          : scriptUtil.mainPath(true)
         break
     }
     if (args.includes('--version')) {

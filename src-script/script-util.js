@@ -192,9 +192,13 @@ async function rebuildSpaIfNeeded() {
         })
     )
     .then((ctx) => {
-      if (ctx.needsRebuild)
-        return scriptUtil.executeCmd(ctx, 'npx', ['quasar', 'build'])
-      else return Promise.resolve(ctx)
+      if (ctx.needsRebuild) {
+        let quasarArgs = ['quasar', 'build']
+        if (process.env.ZAP_DEVTOOLS_BUILD) {
+          quasarArgs.push('--debug')
+        }
+        return scriptUtil.executeCmd(ctx, 'npx', quasarArgs)
+      } else return Promise.resolve(ctx)
     })
     .then(
       (ctx) =>
@@ -362,9 +366,10 @@ async function doneStamp(startTime) {
  * @param {*} isNode
  * @returns main js file path
  */
-function mainPath(isElectron) {
+function mainPath(isElectron, devtools = false) {
   if (isElectron) {
-    return path.join(__dirname, '../dist/src-electron/ui/main-ui.js')
+    let file = devtools ? 'main-ui.dev.js' : 'main-ui.js'
+    return path.join(__dirname, '../dist/src-electron/ui/' + file)
   } else {
     return path.join(__dirname, '../dist/src-electron/main-process/main.js')
   }

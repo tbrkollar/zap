@@ -121,10 +121,16 @@ function createQueryString(
  * @returns BrowserWindow that got created
  */
 export function windowCreate(port, args) {
+  const devtoolsMode = process.argv.includes('--devtools')
   let webPreferences = {
     nodeIntegration: false,
     worldSafeExecuteJavaScript: true,
-    preload: path.resolve(__dirname, 'preload.js')
+    preload: path.resolve(__dirname, 'preload.js'),
+    // Keep default secure isolation for normal runs; relax only for devtools mode
+    // so Vue app and injected devtools bridge share the same global hook.
+    contextIsolation: !devtoolsMode,
+    sandbox: !devtoolsMode,
+    additionalArguments: devtoolsMode ? ['--zap-devtools'] : []
   }
   windowCounter++
   let w = new BrowserWindow({
@@ -147,7 +153,9 @@ export function windowCreate(port, args) {
   })
 
   ipcMain.on('set-title-bar-overlay', (_event, value) => {
-    w.setTitleBarOverlay(value)
+    if (typeof w.setTitleBarOverlay === 'function') {
+      w.setTitleBarOverlay(value)
+    }
   })
 
   let queryString = createQueryString(

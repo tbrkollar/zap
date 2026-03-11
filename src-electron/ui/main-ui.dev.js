@@ -24,30 +24,64 @@
  * @module JS API: UI Development
  */
 
+const { app } = require('electron')
+const { execSync, spawn } = require('child_process')
+const net = require('net')
+const path = require('path')
 const env = require('../util/env')
+// 1. Kill stale Vue DevTools instances and spawn a fresh one.
+try {
+  execSync('pkill -f "vue-devtools"', { stdio: 'ignore' })
+} catch (_err) {
+  // No previous devtools process found.
+}
+const devtoolsProcess = spawn(
+  'npx',
+  ['vue-devtools', '--host', 'localhost', '--port', '8098'],
+  {
+    cwd: path.join(__dirname, '../../..'),
+    stdio: 'inherit',
+    shell: true
+  }
+)
+env.logInfo('Vue DevTools server starting on http://localhost:8098')
 
-// Install `electron-debug` with `devtron`
-require('electron-debug')({ showDevTools: false })
-
-// Install `vue-devtools`
-require('electron')
-  .app.whenReady()
-  .then(() => {
-    let installExtension = require('electron-devtools-installer')
-    installExtension
-      .default(installExtension.VUEJS_DEVTOOLS)
-      .then(() => {
-        env.logInfo('Installation of `vue-tools` succesful.')
+/**
+ * Wait until Vue DevTools server accepts TCP connections.
+ *
+ * @returns {Promise<void>}
+ */
+function waitForDevtoolsServer() {
+  return new Promise((resolve) => {
+    const deadline = Date.now() + 10000
+    const tryConnect = () => {
+      const socket = net.createConnection({ host: 'localhost', port: 8098 })
+      socket.once('connect', () => {
+        socket.destroy()
+        env.logInfo('Vue DevTools server is reachable; booting app')
+        resolve()
       })
-      .catch((err) => {
-        env.logError('Unable to install `vue-devtools`: \n', err)
+      socket.once('error', () => {
+        socket.destroy()
+        if (Date.now() >= deadline) {
+          env.logInfo('Vue DevTools server wait timed out; booting app anyway')
+          resolve()
+          return
+        }
+        setTimeout(tryConnect, 200)
       })
+    }
+    tryConnect()
   })
-
-// Development via Electron.
-if (process.env.MODE === 'electron') {
-  process.argv.push('--allowCors')
 }
 
-// Require `main` process to boot app
-require('./main-ui.js')
+// 2. Clean up: kill the devtools server when the app exits
+app.on('will-quit', () => {
+  if (devtoolsProcess && !devtoolsProcess.killed) {
+    devtoolsProcess.kill()
+  }
+})
+// Require `main` process to boot app after devtools is reachable.
+waitForDevtoolsServer().then(() => {
+  require('./main-ui.js')
+})
