@@ -33,10 +33,31 @@ if (process.argv.includes('--zap-devtools')) {
       'user-app.iife.js'
     )
     const userAppIifeCode = fs.readFileSync(userAppIifePath, 'utf-8')
+    const processShim = {
+      env: { ...process.env, NODE_ENV: process.env.NODE_ENV || 'development' },
+      versions: process.versions,
+      platform: process.platform,
+      type: 'renderer',
+      nextTick: (callback, ...args) =>
+        Promise.resolve().then(() => callback(...args))
+    }
 
     const injectIife = () => {
       window.__VUE_DEVTOOLS_HOST__ = 'http://localhost'
       window.__VUE_DEVTOOLS_PORT__ = 8098
+      // Vue DevTools client expects some Node-like globals in renderer context.
+      if (typeof window.process === 'undefined') {
+        window.process = processShim
+      }
+      if (typeof window.global === 'undefined') {
+        window.global = window
+      }
+      if (
+        typeof window.Buffer === 'undefined' &&
+        typeof Buffer !== 'undefined'
+      ) {
+        window.Buffer = Buffer
+      }
       // eslint-disable-next-line no-eval
       window.eval(userAppIifeCode)
     }
