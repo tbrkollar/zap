@@ -36,7 +36,7 @@ describe('Extensions page functionality', () => {
     cy.dataCy('btn-extensions').click({ force: true })
     cy.wait(1000)
     cy.contains(
-      'You can use this functionality to add custom ZCL clusters to the ZCL Advanced Platform (ZAP). Click the button below to browse for an XML file containing only cluster definitions. JSON files are not currently supported for loading.'
+      'Use this to add custom ZCL elements to the ZCL Advanced Platform (ZAP). Click the button below to select an XML file.'
     ).should('be.visible')
   })
 
@@ -50,14 +50,14 @@ describe('Extensions page functionality', () => {
   it('Should display Added files section', () => {
     cy.dataCy('btn-extensions').click({ force: true })
     cy.wait(1000)
-    cy.contains('Built-in ZCL packages').should('be.visible')
+    cy.contains('Standard ZCL packages').should('be.visible')
   })
 
   it('Should handle empty extensions list', () => {
     cy.dataCy('btn-extensions').click({ force: true })
     cy.wait(1000)
     // Even with no extensions, the page structure should be visible
-    cy.contains('Custom XML extensions').should('be.visible')
+    cy.contains('Custom XML Extensions').should('be.visible')
     cy.get('.cluster-list').should('exist')
   })
 
